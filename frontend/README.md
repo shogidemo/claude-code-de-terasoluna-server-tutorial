@@ -31,7 +31,7 @@ src/
 - **型システム**: TypeScript 5.8.3
 - **ビルドツール**: Vite 6.3.5
 - **状態管理**: React Context API
-- **スタイリング**: CSS Modules
+- **スタイリング**: CSS files
 - **テスト**: Vitest + React Testing Library
 - **永続化**: LocalStorage
 
