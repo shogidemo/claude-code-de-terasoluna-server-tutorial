@@ -1,11 +1,11 @@
 package com.example.todoapp.domain.service;
 
 import com.example.todoapp.domain.model.Todo;
-import java.util.Collection;
+import java.util.List;
 
 public interface TodoService {
     
-    Collection<Todo> findAll();
+    List<Todo> findAll();
     
     Todo create(Todo todo);
     

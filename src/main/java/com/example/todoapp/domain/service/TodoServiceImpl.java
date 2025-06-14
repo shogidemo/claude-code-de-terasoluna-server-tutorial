@@ -10,7 +10,7 @@ import org.terasoluna.gfw.common.exception.ResourceNotFoundException;
 import org.terasoluna.gfw.common.message.ResultMessage;
 import org.terasoluna.gfw.common.message.ResultMessages;
 
-import java.util.Collection;
+import java.util.List;
 
 @Service
 @Transactional
@@ -23,7 +23,7 @@ public class TodoServiceImpl implements TodoService {
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Todo> findAll() {
+    public List<Todo> findAll() {
         return todoRepository.findAllByOrderByCreatedAtDesc();
     }
 

@@ -13,7 +13,6 @@ import org.terasoluna.gfw.common.exception.ResourceNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,7 +52,7 @@ class TodoServiceImplTest {
         when(todoRepository.findAllByOrderByCreatedAtDesc()).thenReturn(expectedTodos);
 
         // When
-        Collection<Todo> actualTodos = todoService.findAll();
+        List<Todo> actualTodos = todoService.findAll();
 
         // Then
         assertThat(actualTodos).isEqualTo(expectedTodos);
