@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODO List - Terasoluna Tutorial</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <h1>TODO List</h1>
+        
+        <!-- Success/Error Messages -->
+        <div th:if="${resultMessages}" th:remove="tag">
+            <div th:each="message : ${resultMessages}" 
+                 th:class="${message.type == 'success'} ? 'alert alert-success' : 'alert alert-danger'"
+                 th:text="${message.text}">
+            </div>
+        </div>
+        
+        <!-- Todo Creation Form -->
+        <div class="form-section">
+            <h3>新しいTODOを追加</h3>
+            <form th:action="@{/todo/create}" th:object="${todoForm}" method="post">
+                <div class="form-group">
+                    <label for="todoTitle">TODOタイトル:</label>
+                    <input type="text" th:field="*{todoTitle}" id="todoTitle" placeholder="TODOを入力してください" />
+                    <button type="submit" class="btn btn-primary">追加</button>
+                </div>
+                <div th:if="${#fields.hasErrors('todoTitle')}" class="errors">
+                    <div th:each="error : ${#fields.errors('todoTitle')}" th:text="${error}"></div>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Todo List -->
+        <div th:if="${todos != null and !todos.isEmpty()}">
+            <h3>TODO一覧</h3>
+            <ul class="todo-list">
+                <li th:each="todo : ${todos}" 
+                    th:class="${todo.finished} ? 'todo-item finished' : 'todo-item'">
+                    <div class="todo-content">
+                        <div class="todo-title" th:text="${todo.todoTitle}"></div>
+                        <div class="todo-date" th:text="${#temporals.format(todo.createdAt, 'yyyy-MM-dd HH:mm')}"></div>
+                    </div>
+                    <div class="todo-actions">
+                        <form th:if="${!todo.finished}" th:action="@{/todo/finish}" method="post" style="display: inline;">
+                            <input type="hidden" name="todoId" th:value="${todo.todoId}">
+                            <button type="submit" class="btn btn-success">完了</button>
+                        </form>
+                        <form th:action="@{/todo/delete}" method="post" style="display: inline;">
+                            <input type="hidden" name="todoId" th:value="${todo.todoId}">
+                            <button type="submit" class="btn btn-danger" 
+                                    onclick="return confirm('本当に削除しますか？')">削除</button>
+                        </form>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <div th:if="${todos == null or todos.isEmpty()}" class="no-todos">
+            TODOがありません。上のフォームから新しいTODOを追加してください。
+        </div>
+    </div>
+    
+    <script>
+        // Auto-hide success messages after 3 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert-success');
+            alerts.forEach(alert => {
+                alert.style.transition = 'opacity 0.5s';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 3000);
+    </script>
+</body>
+</html>

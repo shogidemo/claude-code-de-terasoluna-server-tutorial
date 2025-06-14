@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>エラー - TODO Application</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <h1>エラーが発生しました</h1>
+        
+        <div class="alert alert-danger">
+            <p th:text="${errorMessage} ?: 'システムエラーが発生しました。'"></p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a th:href="@{/todo/list}" class="btn btn-primary">TODOリストに戻る</a>
+        </div>
+    </div>
+</body>
+</html>
