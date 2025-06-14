@@ -46,9 +46,8 @@ class TodoApplicationTests {
         ResponseEntity<String> response = restTemplate.getForEntity(
                 "http://localhost:" + port + "/", String.class);
         
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
-        assertThat(response.getHeaders().getLocation().toString())
-                .contains("/todo/list");
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).contains("TODO List");
     }
 
     @Test

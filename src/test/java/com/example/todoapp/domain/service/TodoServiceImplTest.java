@@ -14,6 +14,7 @@ import org.terasoluna.gfw.common.exception.ResourceNotFoundException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,7 +49,7 @@ class TodoServiceImplTest {
     @Test
     void findAll_returnsAllTodos() {
         // Given
-        Collection<Todo> expectedTodos = Arrays.asList(sampleTodo);
+        List<Todo> expectedTodos = Arrays.asList(sampleTodo);
         when(todoRepository.findAllByOrderByCreatedAtDesc()).thenReturn(expectedTodos);
 
         // When
