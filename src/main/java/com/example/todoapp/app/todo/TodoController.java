@@ -10,10 +10,11 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.terasoluna.gfw.common.exception.BusinessException;
+import org.terasoluna.gfw.common.exception.ResourceNotFoundException;
 import org.terasoluna.gfw.common.message.ResultMessage;
 import org.terasoluna.gfw.common.message.ResultMessages;
 
-import java.util.Collection;
+import java.util.List;
 
 @Controller
 @RequestMapping("todo")
@@ -30,7 +31,7 @@ public class TodoController {
 
     @RequestMapping(value = "list")
     public String list(Model model) {
-        Collection<Todo> todos = todoService.findAll();
+        List<Todo> todos = todoService.findAll();
         model.addAttribute("todos", todos);
         return "todo/list";
     }
@@ -63,7 +64,7 @@ public class TodoController {
                         RedirectAttributes attributes) {
         try {
             todoService.finish(todoId);
-        } catch (BusinessException e) {
+        } catch (BusinessException | ResourceNotFoundException e) {
             model.addAttribute(e.getResultMessages());
             return list(model);
         }
@@ -78,7 +79,7 @@ public class TodoController {
                         RedirectAttributes attributes) {
         try {
             todoService.delete(todoId);
-        } catch (BusinessException e) {
+        } catch (BusinessException | ResourceNotFoundException e) {
             model.addAttribute(e.getResultMessages());
             return list(model);
         }

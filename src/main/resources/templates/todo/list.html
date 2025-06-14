@@ -11,9 +11,9 @@
         <h1>TODO List</h1>
         
         <!-- Success/Error Messages -->
-        <div th:if="${resultMessages}" th:remove="tag">
-            <div th:each="message : ${resultMessages}" 
-                 th:class="${message.type == 'success'} ? 'alert alert-success' : 'alert alert-danger'"
+        <div th:if="${resultMessages != null}" th:remove="tag">
+            <div th:each="message : ${resultMessages.list}" 
+                 th:class="${resultMessages.type.name() == 'SUCCESS'} ? 'alert alert-success' : 'alert alert-danger'"
                  th:text="${message.text}">
             </div>
         </div>

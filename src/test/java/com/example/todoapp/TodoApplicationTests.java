@@ -46,9 +46,10 @@ class TodoApplicationTests {
         ResponseEntity<String> response = restTemplate.getForEntity(
                 "http://localhost:" + port + "/", String.class);
         
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
-        assertThat(response.getHeaders().getLocation().toString())
-                .contains("/todo/list");
+        // TestRestTemplateはリダイレクトを自動的に追従するため、最終的に200 OKが返される
+        // リダイレクト先のTODOリストページが正しく表示されることを確認
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).contains("TODO List");
     }
 
     @Test
