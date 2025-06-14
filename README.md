@@ -66,15 +66,8 @@ src/
 ## 🔧 開発環境セットアップ
 
 ### 前提条件
-- Docker Desktop
-- Visual Studio Code
-- Dev Containers extension
-
-### DevContainer起動
-1. プロジェクトをVSCodeで開く
-2. Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`) を開く
-3. "Dev Containers: Reopen in Container" を選択
-4. DevContainerが自動でビルドされ、開発環境が構築されます
+- Java 17以上
+- Maven (または Maven Wrapper使用)
 
 ### アプリケーション起動
 
