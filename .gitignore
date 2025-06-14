@@ -1,0 +1,4 @@
+.claude/
+target/
+*.log
+.DS_Store
