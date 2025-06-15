@@ -1,6 +1,8 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState, type FormEvent } from 'react';
 import { useTodo } from '../../context/TodoContext';
 import { MIN_TODO_TITLE_LENGTH, MAX_TODO_TITLE_LENGTH } from '../../types/todo';
+import { validateAndSanitizeTodoTitle, comprehensiveInputValidation } from '../../utils/sanitizer';
+import logger from '../../utils/logger';
 import './TodoForm.css';
 
 export const TodoForm: React.FC = () => {
@@ -8,32 +10,46 @@ export const TodoForm: React.FC = () => {
   const [errors, setErrors] = useState<string[]>([]);
   const { addTodo } = useTodo();
 
-  const validateTitle = (title: string): string[] => {
-    const errors: string[] = [];
+  const validateTitle = (title: string): { isValid: boolean; sanitizedTitle: string; errors: string[] } => {
+    // 包括的な入力検証とサニタイゼーション
+    const validation = comprehensiveInputValidation(title, MAX_TODO_TITLE_LENGTH);
     
-    if (!title.trim()) {
-      errors.push('TODOタイトルは必須です。');
-    } else if (title.length < MIN_TODO_TITLE_LENGTH) {
-      errors.push(`TODOタイトルは${MIN_TODO_TITLE_LENGTH}文字以上入力してください。`);
-    } else if (title.length > MAX_TODO_TITLE_LENGTH) {
-      errors.push(`TODOタイトルは${MAX_TODO_TITLE_LENGTH}文字以内で入力してください。`);
+    // セキュリティ警告をログに記録
+    if (validation.securityWarnings.length > 0) {
+      logger.warn('Security warning in TODO title input', {
+        input: title,
+        warnings: validation.securityWarnings,
+      });
     }
     
-    return errors;
+    // 追加の業務ルール検証
+    const todoValidation = validateAndSanitizeTodoTitle(title);
+    
+    return {
+      isValid: validation.isValid && todoValidation.isValid,
+      sanitizedTitle: todoValidation.sanitizedTitle,
+      errors: [...validation.errors, ...todoValidation.errors],
+    };
   };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     
-    const validationErrors = validateTitle(todoTitle);
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors);
+    const validation = validateTitle(todoTitle);
+    if (!validation.isValid) {
+      setErrors(validation.errors);
       return;
     }
     
-    addTodo(todoTitle.trim());
+    // サニタイズされたタイトルを使用
+    addTodo(validation.sanitizedTitle);
     setTodoTitle('');
     setErrors([]);
+    
+    logger.info('TODO form submitted successfully', {
+      originalTitle: todoTitle,
+      sanitizedTitle: validation.sanitizedTitle,
+    });
   };
 
   const handleChange = (value: string) => {

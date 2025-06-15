@@ -1,5 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Todo, ResultMessage, MAX_UNFINISHED_TODOS } from '../types/todo';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import type { Todo, ResultMessage } from '../types/todo';
+import { MAX_UNFINISHED_TODOS } from '../types/todo';
+import { loadTodosFromStorage, saveTodosToStorage, clearCorruptedStorage } from '../utils/storage';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import { ErrorHandler, BusinessLogicError, ValidationError } from '../utils/errorHandler';
+import logger from '../utils/logger';
 
 interface TodoContextType {
   todos: Todo[];
@@ -12,7 +18,6 @@ interface TodoContextType {
 
 const TodoContext = createContext<TodoContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'react-todo-app-todos';
 
 export const TodoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -20,31 +25,33 @@ export const TodoProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // LocalStorageから初期データを読み込み
   useEffect(() => {
-    const storedTodos = localStorage.getItem(STORAGE_KEY);
-    if (storedTodos) {
-      try {
-        const parsedTodos = JSON.parse(storedTodos);
-        setTodos(parsedTodos.map((todo: any) => ({
-          ...todo,
-          createdAt: new Date(todo.createdAt)
-        })));
-      } catch (error) {
-        console.error('Failed to load todos from localStorage:', error);
-      }
+    const loadedTodos = loadTodosFromStorage();
+    if (loadedTodos !== null) {
+      setTodos(loadedTodos);
+    } else {
+      // 破損したデータをクリア
+      clearCorruptedStorage();
     }
   }, []);
 
-  // TodosをLocalStorageに保存
+  // TodosをLocalStorageに保存（デバウンス付き）
+  const debouncedTodos = useDebouncedValue(todos, 500);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-  }, [todos]);
+    if (debouncedTodos.length > 0 || todos.length === 0) {
+      saveTodosToStorage(debouncedTodos);
+    }
+  }, [debouncedTodos, todos.length]);
 
-  const addMessage = useCallback((message: ResultMessage) => {
-    setMessages(prev => [...prev, message]);
+  const addMessage = useCallback((message: ResultMessage | Omit<ResultMessage, 'id'>) => {
+    const messageWithId: ResultMessage = 'id' in message ? message : {
+      ...message,
+      id: uuidv4()
+    };
+    setMessages(prev => [...prev, messageWithId]);
     // 3秒後に自動的にメッセージを削除
-    if (message.type === 'success') {
+    if (messageWithId.type === 'success') {
       setTimeout(() => {
-        setMessages(prev => prev.filter(m => m !== message));
+        setMessages(prev => prev.filter(m => m.id !== messageWithId.id));
       }, 3000);
     }
   }, []);
@@ -54,28 +61,44 @@ export const TodoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const addTodo = useCallback((title: string) => {
-    // 未完了TODOの数をチェック
-    const unfinishedCount = todos.filter(todo => !todo.finished).length;
-    if (unfinishedCount >= MAX_UNFINISHED_TODOS) {
-      addMessage({
-        type: 'error',
-        text: `未完了のTODOは最大${MAX_UNFINISHED_TODOS}件までです。`
-      });
-      return;
+    try {
+      // バリデーション
+      if (!title || title.trim().length === 0) {
+        throw new ValidationError('TODOタイトルは必須です。');
+      }
+      
+      const trimmedTitle = title.trim();
+      if (trimmedTitle.length > 30) {
+        throw new ValidationError('TODOタイトルは30文字以内で入力してください。');
+      }
+
+      // 未完了TODOの数をチェック
+      const unfinishedCount = todos.filter(todo => !todo.finished).length;
+      if (unfinishedCount >= MAX_UNFINISHED_TODOS) {
+        throw new BusinessLogicError(`未完了のTODOは最大${MAX_UNFINISHED_TODOS}件までです。`);
+      }
+
+      const newTodo: Todo = {
+        todoId: uuidv4(),
+        todoTitle: trimmedTitle,
+        finished: false,
+        createdAt: new Date()
+      };
+
+      setTodos(prev => [newTodo, ...prev]);
+      
+      const successMessage: ResultMessage = {
+        id: uuidv4(),
+        type: 'success',
+        text: 'TODOを作成しました。'
+      };
+      addMessage(successMessage);
+      
+      logger.info('TODO created successfully', { todoId: newTodo.todoId, title: trimmedTitle });
+    } catch (error) {
+      const errorMessage = ErrorHandler.handleError(error);
+      addMessage(errorMessage);
     }
-
-    const newTodo: Todo = {
-      todoId: Date.now().toString(),
-      todoTitle: title,
-      finished: false,
-      createdAt: new Date()
-    };
-
-    setTodos(prev => [newTodo, ...prev]);
-    addMessage({
-      type: 'success',
-      text: 'TODOを作成しました。'
-    });
   }, [todos, addMessage]);
 
   const finishTodo = useCallback((todoId: string) => {
@@ -132,14 +155,14 @@ export const TodoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [addMessage]);
 
-  const value: TodoContextType = {
+  const value: TodoContextType = useMemo(() => ({
     todos,
     messages,
     addTodo,
     finishTodo,
     deleteTodo,
     clearMessages
-  };
+  }), [todos, messages, addTodo, finishTodo, deleteTodo, clearMessages]);
 
   return <TodoContext.Provider value={value}>{children}</TodoContext.Provider>;
 };

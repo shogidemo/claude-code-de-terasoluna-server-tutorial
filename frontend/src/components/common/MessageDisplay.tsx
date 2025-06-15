@@ -11,9 +11,9 @@ export const MessageDisplay: React.FC = () => {
 
   return (
     <div className="messages-container">
-      {messages.map((message, index) => (
+      {messages.map((message) => (
         <div
-          key={index}
+          key={message.id}
           className={`alert alert-${message.type}`}
           role="alert"
         >

@@ -5,6 +5,13 @@ export interface Todo {
   createdAt: Date;
 }
 
+export interface StoredTodo {
+  todoId: string;
+  todoTitle: string;
+  finished: boolean;
+  createdAt: string; // ISO文字列形式
+}
+
 export interface TodoFormData {
   todoTitle: string;
 }
@@ -17,6 +24,7 @@ export interface ValidationError {
 export interface ResultMessage {
   type: 'success' | 'error' | 'warning' | 'info';
   text: string;
+  id: string; // メッセージの一意識別子
 }
 
 export const MAX_UNFINISHED_TODOS = 5;
